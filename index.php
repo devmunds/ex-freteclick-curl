@@ -1,12 +1,21 @@
 <?php
-
 /*
-* URL: https://api.freteclick.com.br/quote/
+* URL's Obrigatórias para fazer contação e transforma a cotação em um pedido com API FreteClick
 */
+$url_api                          = 'https://api.freteclick.com.br/quotes';
+$url_shipping_quote               = '/sales/shipping-quote.json';
+$url_city_origin                  = '/carrier/search-city-origin.json';
+$url_city_destination             = '/carrier/search-city-destination.json';
+$url_search_city_from_cep         = '/carrier/search-city-from-cep.json';
+$url_choose_quote                 = '/sales/choose-quote.json';
+$url_add_quote_destination_client = '/sales/add-quote-destination-client.json';
+$url_add_quote_origin_company     = '/sales/add-quote-origin-company.json.json';
 
-$url = 'https://api.freteclick.com.br/quotes';
+
+// Chave para realizar cotação com platafoma
 $api_token = '242c5d6f05fd292bc91fd67170dc5a04';
 
+//Dados obrigatórios para cotação
 $data = array (
     'origin' => 
     array (
@@ -40,23 +49,34 @@ $ch = curl_init();
 $payload = json_encode( $data );
 
 $headers = array(
-    'api-token: '.$api_token,
+    'api-token: '. $api_token,
     'Content-Type:application/json'
 );
 
 curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-curl_setopt( $ch, CURLOPT_URL, $url);
+curl_setopt( $ch, CURLOPT_URL, $url_api);
 
 $result = json_decode(curl_exec($ch));
 
 curl_close($ch);
 
+//Get order id
+foreach($result->response->data as $key => $order){
 
+  echo "<h2>COTATÇÃO: " . $order->id . "</h2><br>";
+
+}
+
+//Get quotes
 foreach($result->response->data->order->quotes as $key => $results){
 
     $quote = (array) $results;
-    
-    echo "Name: " . $quote['carrier']->name .  " Prince: ". $quote['total'] .  "<br/>";
+
+    echo "TRANSPORTADORA: " . $quote['carrier']->alias .  " | PREÇO: ". number_format($quote['total'],2,',','.') .  "<br><hr>";
 }
+
+
+
+
