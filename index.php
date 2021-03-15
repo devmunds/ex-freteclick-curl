@@ -125,7 +125,7 @@ class FreteClick{
   }
 
   //CRIA O COMSUMIDOR E RETORNA O ID
-  public function add_consumer(array $data){
+  public function createCustomer(array $data){
 
     $this->url_api = 'https://api.freteclick.com.br/people/customer';
 
@@ -155,12 +155,46 @@ class FreteClick{
     return null;  
   }
 
+  //RETONA ID peopleId E companyId
+  public function getMe(){
+    
+    $this->url_api = 'https://api.freteclick.com.br/people/me';
 
-  public function setOrderCheckoutAsFinished(){
+    $ch = curl_init();
 
-    $comsumerId = $this->getIdByEmail('ddd@gmail.com');
+    $headers = array(
+      'Accept: application/ld+json',
+      'Content-Type: application/json',
+      'api-token: ' . $this->api_key
+    );
 
-    if($comsumerId === null){
+    $ch = curl_init();
+
+    curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_URL, $this->url_api);
+
+    $result =  json_decode(curl_exec($ch));
+
+    curl_close($ch); 
+        
+    if($result->response->success === false){      
+      return null;
+    }
+
+    return $result->response->data;
+
+  }
+
+  public function setOrderCheckoutAsFinished($order){
+  
+    $orderId = $order;
+    $quoteId = $order;
+
+
+    $customerId = $this->getIdByEmail('devmunds@gmail.com');
+
+    if($customerId === null){
 
       $payload = [
         'name'    => 'LEANDROD',
@@ -179,32 +213,30 @@ class FreteClick{
         ],   
       ];
 
-      $comsumerId = $this->add_consumer($payload);
+      $customerId = $this->createCustomer($payload);
 
-      if($comsumerId === null){
-        echo "Não foi possivel criar o consumidor";
+      if($customerId === null){
+        echo "Não foi possivel criar o customer<hr></br>";
       }
 
     }
 
-
-    //ATUALIZA PARA API FRETECLICK A ORDEM
     /*
-    $quote_id = 219932;
-
-    $this->url_api = "https://api.freteclick.com.br/purchasing/orders/{$quote_id}/choose-quote";
-
-    $filds = [
-      "quote" => $quote_id,
-      "payer" => 17669,
-      "price" =>118.24772727272726,
+    *
+    *
+    */
+    
+    $shopOwner = $this->getMe();
+    
+    var_dump($shopOwner);
+    echo "<hr><br>";
+    
+    $payload = [
+      "quote" => $quoteId,
+      "price" => 118.24772727272726,      
+      "payer" => $shopOwner->companyId,
       "retrieve" => [
-        "id" => 17669,
-        "address" => 'TESTE',
-        "contact" => 17668
-      ],
-      "delivery" => [
-        "id" => 17669,
+        "id" => $shopOwner->companyId,
         "address" => [
           "id" => null,
           "country" => "Brasil",
@@ -216,35 +248,69 @@ class FreteClick{
           "number" => "1702",
           "complement" => ""
         ],
-        "contact" => 17669
+        "contact" => $shopOwner->peopleId,
       ],
-      "comments" => ""
+      "delivery" => [
+        "id" => $customerId,
+        "address" => [
+          "id" => null,
+          "country" => "Brasil",
+          "state" => "RJ",
+          "city" => "Rio de Janeiro",
+          "district" => "Copacabana",
+          "postal_code" => "22021001",
+          "street" => "Avenida Atlântica",
+          "number" => "1702",
+          "complement" => ""
+        ],
+        "contact" => $customerId
+      ],
     ];
+
+    if($this->finishCheckout($orderId, $payload) === true){
+
+      echo "ok";
+
+      return true;
+
+    }
     
+
+  }
+
+  //TRANSFORMA A COTAÇÃO EM PEDIDO
+  public function finishCheckout(int $orderId, array $data){
+
+    $this->url_api = "https://api.freteclick.com.br/purchasing/orders/". $orderId . "/choose-quote";
+
     $ch = curl_init();
     
-    $payload = json_encode( $filds );
+    $payload = json_encode( $data );
     
     $headers = array(
-      'api-token: '. $this->api_key,
-      'Content-Type:application/json'
+      'Accept: application/json',
+      'Content-Type: application/json',
+      'api-token: ' . $this->api_key
     );
     
     curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_POST,           true);
+    curl_setopt( $ch, CURLOPT_CUSTOMREQUEST,  'PUT');    
     curl_setopt( $ch, CURLOPT_URL, $this->url_api);
     
-    $chose_quote = curl_exec($ch);
+    $result = json_decode(curl_exec($ch));
     
-    var_dump($chose_quote);
+    var_dump($result);
 
     curl_close($ch);
 
-    return json_decode($chose_quote);    
+    if(empty( $result ) === false) {
+      return true;
+    }
 
-    */
-
+    return null;  
   }
 
 }
@@ -252,9 +318,8 @@ class FreteClick{
 
 $freteclick = new FreteClick();
 
-echo $freteclick->get_quotes();
+//echo $freteclick->get_quotes();
 
-$freteclick->setOrderCheckoutAsFinished();
+$freteclick->setOrderCheckoutAsFinished(220349);
 
-
-
+//$freteclick->getMe();
