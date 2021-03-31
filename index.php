@@ -19,14 +19,14 @@ class FreteClick{
       $data = array(
         'origin' => 
         array (
-          'city' => 'São Paulo',
-          'state' => 'SP',
+          'city' => 'Rio de Janeiro',
+          'state' => 'RJ',
           'country' => 'Brasil',
         ),
         'destination' => 
         array (
-          'city' => 'Osasco',
-          'state' => 'SP',
+          'city' => 'Rio de Janeiro',
+          'state' => 'RJ',
           'country' => 'Brasil',
         ),
         'productTotalPrice' => 30,
@@ -79,7 +79,9 @@ class FreteClick{
 
           $quote = (array) $results;
 
-          $title = "TRANSPORTADORA: " . $quote['carrier']->alias .  " | PREÇO: ". number_format($quote['total'],2,',','.') .  "<br><hr>";
+          var_dump(json_encode($quote));
+
+          $title = "QUOTE: " . $quote['carrier']->id  . " | TRANSPORTADORA: " . $quote['carrier']->alias .  " | PREÇO: ". number_format($quote['total'],2,',','.') .  "<br><hr>";
 
           echo $title;
 
@@ -186,29 +188,31 @@ class FreteClick{
 
   }
 
-  public function setOrderCheckoutAsFinished($order){
-  
-    $orderId = $order;
-    $quoteId = $order;
+  public function setOrderCheckoutAsFinished(){
 
+    $orderId = 234761;  //id do order, ...
+    $quoteId = 1294716; //id da cotação, primeiro id da lista do array
 
-    $customerId = $this->getIdByEmail('devmunds@gmail.com');
+    //Recebe o id do Custumer caso exista
+    $customerId = $this->getIdByEmail('ghghsg@gmail.com');
 
+    //Se o Custumer não existir criar o mesmo antes!
     if($customerId === null){
 
       $payload = [
-        'name'    => 'LEANDROD',
-        'alias'   => 'CUNHAD',
-        'type'    => 'F',
-        'email'   => 'gggH@g.com.br',
-        "address" => [
-          "country" => "Brasil",
-          "state" => "RJ",
-          "city" => "Rio de Janeiro",
-          "district" => "Copacabana",
-          "complement" => "",
-          "street" => "Avenida Atlântica",
-          "number" => "1702",
+        'name'          => 'LEANDRO GABRIEL C',
+        'alias'         => 'CUNHA',
+        'type'          => '4',
+        'document'      => '440.441.858-24',
+        'email'         => 'ghghsg@gmail.com',
+        "address"       => [
+          "country"     => "Brasil",
+          "state"       => "RJ",
+          "city"        => "Rio de Janeiro",
+          "district"    => "Copacabana",
+          "complement"  => "",
+          "street"      => "Avenida Atlântica",
+          "number"      => "1702",
           "postal_code" => "22021001"
         ],   
       ];
@@ -216,13 +220,13 @@ class FreteClick{
       $customerId = $this->createCustomer($payload);
 
       if($customerId === null){
-        echo "Não foi possivel criar o customer<hr></br>";
+        printf('<span>Não foi possivel criar o customer</span>');
       }
 
     }
 
     /*
-    *
+    * Recebe os dados da cotação e do custumer
     *
     */
     
@@ -233,7 +237,7 @@ class FreteClick{
     
     $payload = [
       "quote" => $quoteId,
-      "price" => 118.24772727272726,      
+      "price" => 85.69500000000002,      
       "payer" => $shopOwner->companyId,
       "retrieve" => [
         "id" => $shopOwner->companyId,
@@ -269,7 +273,7 @@ class FreteClick{
 
     if($this->finishCheckout($orderId, $payload) === true){
 
-      echo "ok";
+      echo "finishCheckout ok";
 
       return true;
 
@@ -301,10 +305,10 @@ class FreteClick{
     curl_setopt( $ch, CURLOPT_URL, $this->url_api);
     
     $result = json_decode(curl_exec($ch));
-    
     var_dump($result);
 
     curl_close($ch);
+
 
     if(empty( $result ) === false) {
       return true;
@@ -318,8 +322,8 @@ class FreteClick{
 
 $freteclick = new FreteClick();
 
-//echo $freteclick->get_quotes();
+echo $freteclick->get_quotes();
 
-$freteclick->setOrderCheckoutAsFinished(220349);
+$freteclick->setOrderCheckoutAsFinished();
 
-//$freteclick->getMe();
+$freteclick->getMe();
